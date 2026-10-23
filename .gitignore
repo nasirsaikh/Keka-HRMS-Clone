@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/node_modules/
+**/peoplehub.db*
+**/appsettings.Production.json
+.env
+*.user
+*.suo
+src/PeopleHub/wwwroot/vendor/

@@ -1,0 +1,24 @@
+@model DashboardModel
+@{ViewData["Title"]="Overview";}
+<div class="ph-page-top"><div><p class="ph-eyebrow">YOUR WORKSPACE AT A GLANCE</p><h1>Good day, @Model.Shell.User.DisplayName.Split(' ')[0] <span class="ph-spark">✳</span></h1><p>Here's what's happening across your people and workplace today.</p></div><div class="ph-page-actions"><a href="/workspace/employees" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people me-1"></i> People directory</a><a href="/workspace/leave-requests" class="btn btn-primary btn-sm"><i class="bi bi-calendar-plus me-1"></i> Request leave</a></div></div>
+<div class="ph-welcome"><span><i class="bi bi-stars"></i></span><div><strong>Everything you need, in one place</strong><small>Make everyday HR work faster with a unified workspace.</small></div><a href="/themes">Personalise your space <i class="bi bi-arrow-up-right"></i></a></div>
+<div class="ph-stat-grid">
+@foreach(var item in new[]{("Active employees",Model.Employees,"people-fill","employees","indigo"),("Present today",Model.Present,"calendar-check","attendance","green"),("Leave requests",Model.Leaves,"calendar-range","leave-requests","amber"),("Open positions",Model.Vacancies,"briefcase","job-openings","blue"),("Helpdesk tickets",Model.Tickets,"chat-left-text","hr-tickets","purple"),("Pending expenses",Model.Expenses,"wallet2","expense-claims","pink")}){
+<a href="/workspace/@item.Item4" class="ph-stat"><div class="ph-stat-icons"><span class="ph-stat-icon @item.Item5"><i class="bi bi-@item.Item3"></i></span><i class="bi bi-arrow-up-right"></i></div><b>@item.Item2</b><small>@item.Item1</small></a>
+}</div>
+<div class="ph-two-col">
+<section class="card ph-card"><div class="card-header ph-card-header"><div><h2>Workforce snapshot</h2><p>Current HR workflow totals</p></div><span class="ph-soft-tag">Live data</span></div><div class="card-body"><div class="ph-bar-chart">
+@foreach(var item in new[]{("Employees",Model.Employees),("Present",Model.Present),("Leave",Model.Leaves),("Vacancies",Model.Vacancies),("Tickets",Model.Tickets),("Expenses",Model.Expenses)}){
+    var max=Math.Max(1,new[]{Model.Employees,Model.Present,Model.Leaves,Model.Vacancies,Model.Tickets,Model.Expenses}.Max());
+    <div class="ph-bar-item"><div class="ph-bar-track"><div class="ph-bar" style="height:@(Math.Max(4,Math.Round(item.Item2*100.0/max)))%"><span>@item.Item2</span></div></div><small>@item.Item1</small></div>
+}
+</div></div></section>
+<section class="card ph-card"><div class="card-header ph-card-header"><div><h2>Quick actions</h2><p>Get the most important work done</p></div><i class="bi bi-lightning-charge text-secondary"></i></div><div class="card-body ph-quick">
+@foreach(var item in new[]{("employees","People directory","people"),("attendance","Review attendance","calendar-check"),("leave-requests","Manage leave requests","calendar-range"),("expense-claims","Expense claims","wallet2"),("job-openings","Recruitment pipeline","briefcase"),("hr-tickets","HR helpdesk","chat-dots")}){
+<a href="/workspace/@item.Item1"><span><i class="bi bi-@item.Item3"></i></span><strong>@item.Item2</strong><i class="bi bi-chevron-right"></i></a>
+}
+</div></section></div>
+<section class="card ph-card mt-3"><div class="card-header ph-card-header"><div><h2>Recent leave requests</h2><p>Latest submissions</p></div><a href="/workspace/leave-requests" class="btn btn-outline-secondary btn-sm">View all <i class="bi bi-arrow-right ms-1"></i></a></div><div class="table-responsive"><table class="table ph-table mb-0"><thead><tr><th>Employee ID</th><th>Start date</th><th>End date</th><th>Status</th></tr></thead><tbody>
+@foreach(var row in Model.Recent){<tr><td>EMP-@row.Fields["EmployeeId"]</td><td>@row.Fields["StartDate"]</td><td>@row.Fields["EndDate"]</td><td><span class="ph-badge">@row.Fields["Status"]</span></td></tr>}
+@if(!Model.Recent.Any()){<tr><td colspan="4" class="ph-empty">No leave requests yet</td></tr>}
+</tbody></table></div></section>

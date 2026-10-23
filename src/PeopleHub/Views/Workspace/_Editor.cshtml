@@ -1,0 +1,30 @@
+@model EditorModel
+<div class="ph-modal-backdrop" data-modal-backdrop><div class="ph-modal" role="dialog" aria-modal="true" aria-label="@(Model.ReadOnly?"View":"Edit") @Model.Module.Title">
+<header class="ph-modal-header"><div><p class="ph-eyebrow">@Model.Module.Group.ToUpperInvariant()</p><h2>@(Model.ReadOnly?"View":Model.Record is null?"New":"Edit") @Model.Module.Title</h2></div><button class="ph-icon-btn" type="button" aria-label="Close" data-close-modal><i class="bi bi-x-lg"></i></button></header>
+<form hx-post="/workspace/@Model.Module.Slug/save?id=@(Model.Record?.Id??0)" hx-target="#modal-host" hx-swap="innerHTML">
+    @Html.AntiForgeryToken()
+    <div class="ph-modal-body">
+    @if(!string.IsNullOrWhiteSpace(Model.Error)){<div role="alert" class="alert alert-danger py-2">@Model.Error</div>}
+    <div class="row g-3">
+    @foreach(var field in Model.Fields){
+        if(field.Name=="TokensJson"||field.Name=="Shared")continue;
+        if(Model.Module.StatusWorkflow && field.Name=="Status")continue;
+        if(Model.Record==null&&field.Name=="Status"&&field.Choices!=null)continue;
+        <div class="col-12 @(field.Kind=="textarea"?"":"col-md-6")"><label class="form-label" for="edit-@field.Name">@field.Label @(field.Required?"*":"")</label>
+        @if(field.Kind=="select" && field.Lookup!=null){
+            <select class="form-select ph-search-select" name="@field.Name" id="edit-@field.Name" disabled="@Model.ReadOnly" required="@field.Required"><option value="">Choose @field.Label.ToLowerInvariant()</option>
+            @if(Model.Lookups.TryGetValue(field.Lookup,out var opts)){@foreach(var item in opts){<option value="@item.Key" selected="@(Model.Value(field.Name)==item.Key.ToString())">@item.Value</option>}}
+            </select>
+        }else if(field.Kind=="choice" && field.Choices!=null){
+            <select class="form-select" name="@field.Name" id="edit-@field.Name" disabled="@Model.ReadOnly">@foreach(var choice in field.Choices){<option value="@choice" selected="@(Model.Value(field.Name)==choice)">@choice</option>}</select>
+        }else if(field.Kind=="textarea"){
+            <textarea class="form-control" name="@field.Name" id="edit-@field.Name" rows="3" disabled="@Model.ReadOnly">@Model.Value(field.Name)</textarea>
+        }else if(field.Kind=="checkbox"){
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="@field.Name" value="true" id="edit-@field.Name" checked="@(Model.Value(field.Name)=="true")" disabled="@Model.ReadOnly"/><label class="form-check-label" for="edit-@field.Name">Enabled</label></div>
+        }else{
+            <input class="form-control" type="@field.Kind" name="@field.Name" id="edit-@field.Name" value="@Model.Value(field.Name)" required="@field.Required" disabled="@Model.ReadOnly" step="@(field.Kind=="number"?"any":null)" />
+        }
+        </div>
+    }
+    </div></div><footer class="ph-modal-footer"><button class="btn btn-outline-secondary btn-sm" type="button" data-close-modal>@(Model.ReadOnly?"Close":"Cancel")</button>@if(!Model.ReadOnly){<button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-check-lg me-1"></i> Save record</button>}</footer>
+</form></div></div>

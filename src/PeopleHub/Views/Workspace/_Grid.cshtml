@@ -1,0 +1,26 @@
+@model ModuleModel
+<div class="table-responsive"><table id="records-table" class="table ph-table mb-0"><thead><tr>
+@foreach(var col in Model.Module.Columns){<th>@System.Text.RegularExpressions.Regex.Replace(col,"([a-z])([A-Z])","$1 $2")</th>}
+<th class="text-end">Actions</th></tr></thead><tbody>
+@foreach(var row in Model.Results.Rows){
+<tr>
+@foreach(var col in Model.Module.Columns){
+    var value=Model.Display(row,col);
+    <td>@if(col=="Status"||col=="Stage") {<span class="ph-badge" data-status="@value.ToLowerInvariant()">@value</span>} else{<span class="@(col==Model.Module.Columns[0]?"fw-semibold":"")">@value</span>}</td>
+}
+<td class="text-end"><div class="ph-table-actions"><button type="button" title="View" aria-label="View record" hx-get="/workspace/@Model.Module.Slug/editor?id=@row.Id&amp;view=true" hx-target="#modal-host"><i class="bi bi-eye"></i></button>
+@if(Model.CanWrite && (Model.Shell.Role=="HR"||Model.Shell.Role=="Admin")){
+<button type="button" title="Edit" aria-label="Edit record" hx-get="/workspace/@Model.Module.Slug/editor?id=@row.Id" hx-target="#modal-host"><i class="bi bi-pencil-square"></i></button>}
+@if(Model.CanDecide && Model.Module.StatusWorkflow){<select aria-label="Review request" name="status" class="ph-decision" hx-post="/workspace/@Model.Module.Slug/decision/@row.Id" hx-trigger="change" hx-target="#toast-holder" hx-swap="innerHTML"><option value="">Decide…</option>
+@foreach(var value in (Model.Module.Slug=="payroll-runs"?new[]{"Draft","Approved","Paid"}:Model.Module.Slug=="hr-tickets"?new[]{"Open","InProgress","Closed"}:new[]{"Approved","Rejected"})){<option value="@value">@value</option>}</select>}
+@if(Model.Shell.Role=="HR"||Model.Shell.Role=="Admin"){
+<button type="button" class="text-danger" title="Delete" aria-label="Delete record" hx-post="/workspace/@Model.Module.Slug/delete/@row.Id" hx-confirm="Delete this record permanently?" hx-target="closest tr" hx-swap="outerHTML"><i class="bi bi-trash3"></i></button>}
+</div></td></tr>
+}
+@if(!Model.Results.Rows.Any()){<tr><td colspan="@(Model.Module.Columns.Length+1)" class="ph-empty">No matching records. Use Add record to get started.</td></tr>}
+</tbody></table></div>
+<div class="ph-table-footer"><span>Page @Model.Results.Page · @Model.Results.Rows.Count of @Model.Results.Count</span><nav aria-label="Pagination" class="d-flex align-items-center gap-2">
+@if(Model.Results.Page>1){<button class="btn btn-outline-secondary btn-sm" hx-get="/workspace/@Model.Module.Slug/grid?page=@(Model.Results.Page-1)&amp;q=@Uri.EscapeDataString(Model.Search)" hx-target="#resource-grid"><i class="bi bi-chevron-left"></i> Previous</button>}
+<span class="ph-page-number">@Model.Results.Page</span>
+@if(Model.Results.Page<Model.Results.Pages){<button class="btn btn-outline-secondary btn-sm" hx-get="/workspace/@Model.Module.Slug/grid?page=@(Model.Results.Page+1)&amp;q=@Uri.EscapeDataString(Model.Search)" hx-target="#resource-grid">Next <i class="bi bi-chevron-right"></i></button>}
+</nav></div>

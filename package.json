@@ -1,0 +1,12 @@
+{
+  "name": "peoplehub-static-assets",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "admin-lte": "4.10.1",
+    "bootstrap": "5.3.8",
+    "bootstrap-icons": "1.13.1",
+    "htmx.org": "2.0.8"
+  }
+}

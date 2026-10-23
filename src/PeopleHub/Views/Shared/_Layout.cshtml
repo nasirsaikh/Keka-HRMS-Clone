@@ -1,0 +1,71 @@
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Anti
+@{
+    var shell = (Model as DashboardModel)?.Shell ?? (Model as ModuleModel)?.Shell ?? ViewBag.Shell as ShellModel;
+    var antiforgery = Anti.GetAndStoreTokens(Context).RequestToken;
+    string pageTitle = ViewData["Title"]?.ToString() ?? "PeopleHub HRMS";
+    var grouped=Modules.All.Where(x=>x.Group!="Settings").GroupBy(x=>x.Group).ToArray();
+}
+<!doctype html>
+<html lang="en" data-bs-theme="light" data-density="compact" data-sidebar="dark" data-header="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="@antiforgery" />
+    <title>@pageTitle · PeopleHub</title>
+    <link rel="stylesheet" href="~/vendor/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/adminlte.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/bootstrap-icons.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/peoplehub.css" asp-append-version="true" />
+    <script src="~/js/early-theme.js" asp-append-version="true"></script>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+<header class="app-header navbar navbar-expand bg-body border-bottom ph-topbar">
+    <div class="container-fluid">
+        <button class="btn btn-link ph-nav-button" type="button" data-lte-toggle="sidebar" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+        <div class="ph-breadcrumb">Workspace <i class="bi bi-chevron-right"></i> <strong>@(shell?.ActiveSlug=="overview"?"Overview":shell?.ActiveSlug=="themes"?"Theme studio":Modules.Index.GetValueOrDefault(shell?.ActiveSlug??"")?.Title)</strong></div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span class="ph-company d-none d-sm-flex"><i class="bi bi-building me-2"></i> @shell?.Company.Name</span>
+            <button class="ph-icon-btn" type="button" data-toggle-mode title="Switch light/dark"><i class="bi bi-moon-stars"></i></button>
+            <a class="ph-icon-btn" href="/themes" title="Theme studio"><i class="bi bi-palette"></i></a>
+            <span class="ph-avatar" title="@shell?.User.DisplayName">@(shell?.User.DisplayName?.Substring(0,1).ToUpper()??"U")</span>
+            <form action="/auth/logout" method="post">@Html.AntiForgeryToken()<button class="ph-icon-btn" title="Sign out" aria-label="Sign out"><i class="bi bi-box-arrow-right"></i></button></form>
+        </div>
+    </div>
+</header>
+<aside class="app-sidebar shadow ph-sidebar" data-bs-theme="dark">
+    <a href="/" class="sidebar-brand ph-brand"><span class="ph-brand-glyph"><i class="bi bi-hexagon-fill"></i></span><span class="brand-text">PeopleHub<span class="ph-dot">.</span><small>HR WORKSPACE</small></span></a>
+    <div class="sidebar-wrapper">
+        <div class="ph-sidebar-search"><i class="bi bi-search"></i><input id="nav-filter" placeholder="Find a module…" aria-label="Find a module" autocomplete="off" /></div>
+        <nav class="mt-2 ph-navigation">
+            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation">
+                <li class="nav-item"><a href="/" title="Overview" class="nav-link @(shell?.ActiveSlug=="overview"?"active":"")"><i class="nav-icon bi bi-grid-1x2"></i><p>Overview</p></a></li>
+                @foreach(var group in grouped){
+                    <li class="nav-header">@group.Key.ToUpperInvariant()</li>
+                    @foreach(var module in group){
+                        if(module.HrOnly && shell?.Role is not ("HR" or "Admin"))continue;
+                        <li class="nav-item ph-module-link" data-module-title="@module.Title.ToLowerInvariant()"><a href="/workspace/@module.Slug" title="@module.Title" class="nav-link @(shell?.ActiveSlug==module.Slug?"active":"")"><i class="nav-icon bi bi-@module.Icon"></i><p>@module.Title</p></a></li>
+                    }
+                }
+                <li class="nav-header">WORKSPACE</li>
+                <li class="nav-item"><a href="/themes" class="nav-link @(shell?.ActiveSlug=="themes"?"active":"")"><i class="nav-icon bi bi-palette2"></i><p>Theme studio</p></a></li>
+                <li class="nav-item"><a href="/api/v1/modules" target="_blank" class="nav-link"><i class="nav-icon bi bi-braces"></i><p>REST API modules</p></a></li>
+            </ul>
+        </nav>
+        <div class="ph-sidebar-profile"><span class="ph-avatar">@(shell?.User.DisplayName?.Substring(0,1).ToUpper()??"U")</span><div><strong>@shell?.User.DisplayName</strong><small>@shell?.Role · @shell?.Company.Code</small></div><i class="bi bi-three-dots"></i></div>
+    </div>
+</aside>
+<main class="app-main">
+    <div class="app-content ph-content"><div class="container-fluid">@RenderBody()</div></div>
+    <div class="ph-footer"><span>PeopleHub HRMS · AdminLTE 4 + HTMX</span><span>© 2026 · People operations, simplified</span></div>
+</main>
+</div>
+<div id="modal-host" aria-live="polite"></div>
+<div id="toast-holder" class="ph-toast-holder" aria-live="polite"></div>
+<script src="~/vendor/bootstrap.bundle.min.js" asp-append-version="true"></script>
+<script src="~/vendor/adminlte.min.js" asp-append-version="true"></script>
+<script src="~/vendor/htmx.min.js" asp-append-version="true"></script>
+<script src="~/js/peoplehub.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts",required:false)
+</body></html>
