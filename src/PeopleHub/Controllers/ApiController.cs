@@ -41,7 +41,7 @@ public sealed class ApiController(AppDbContext db,AccessService access,UserManag
         var user=await Current();if(user is null)return Unauthorized();
         if(!Modules.Index.TryGetValue(slug,out var module))return NotFound();
         if(module.HrOnly&&!await access.IsHr(user))return Forbid();
-        var owner=module.OwnerProperty is not null&&!await access.IsManager(user)?user.EmployeeId??-1:null;
+        int? owner=module.OwnerProperty is not null&&!await access.IsManager(user)?user.EmployeeId??-1:null;
         if(slug=="payroll-lines"&&!await access.IsHr(user))owner=user.EmployeeId??-1;
         var result=await Modules.Handlers[slug].List(db,user.CompanyId,page,search,owner);
         var visible=new List<RecordRow>();foreach(var row in result.Rows)if(await access.CanRead(user,module,row))visible.Add(row);

@@ -54,7 +54,7 @@ public sealed class WorkspaceController(AppDbContext db,AccessService access,Use
     private async Task<ModuleModel> BuildModel(ShellModel shell,ModuleSpec module,string? q,int page)
     {
         var elevated=await access.IsManager(shell.User);
-        var owner=module.OwnerProperty is not null&&!elevated?shell.User.EmployeeId??-1:null;
+        int? owner=module.OwnerProperty is not null&&!elevated?shell.User.EmployeeId??-1:null;
         if(module.Slug=="payroll-lines"&&!await access.IsHr(shell.User))owner=shell.User.EmployeeId??-1;
         var result=await Modules.Handlers[module.Slug].List(db,shell.Company.Id,Math.Max(1,page),q,owner);
         var visible=new List<RecordRow>();
@@ -89,7 +89,7 @@ public sealed class WorkspaceController(AppDbContext db,AccessService access,Use
         var shell=await Shell(slug);if(shell is null)return Forbid();
         if(module.HrOnly && !await access.IsHr(shell.User))return Forbid();
         var handler=Modules.Handlers[slug];
-        var owner=module.OwnerProperty is not null&&!await access.IsManager(shell.User)?shell.User.EmployeeId??-1:null;
+        int? owner=module.OwnerProperty is not null&&!await access.IsManager(shell.User)?shell.User.EmployeeId??-1:null;
         var record=id>0?await handler.Get(db,shell.Company.Id,id,owner):null;
         if(id>0 && (record is null||!await access.CanRead(shell.User,module,record)))return NotFound();
         if(!view && !await access.CanWrite(shell.User,module,id==0,record))return Forbid();
