@@ -13,7 +13,7 @@ using PeopleHub.Services;
 namespace PeopleHub.Controllers;
 
 [ApiController,Route("api/v1")]
-[Authorize(AuthenticationSchemes=IdentityConstants.ApplicationScheme+",ApiBearer")]
+[Authorize(AuthenticationSchemes="Identity.Application,ApiBearer")]
 public sealed class ApiController(AppDbContext db,AccessService access,UserManager<AppUser> users,
     SignInManager<AppUser> signIn,IAntiforgery antiforgery):ControllerBase
 {
